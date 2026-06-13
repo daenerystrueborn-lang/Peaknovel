@@ -1,0 +1,1411 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: PeakNovel API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: auth
+  - name: books
+  - name: chapters
+  - name: users
+  - name: comments
+  - name: home
+  - name: admin
+  - name: premium
+  - name: notifications
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── AUTH ───────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Validation error
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+
+  # ── HOME ───────────────────────────────────────────────
+  /home:
+    get:
+      operationId: getHome
+      tags: [home]
+      summary: Home page data
+      responses:
+        "200":
+          description: Home data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeData"
+
+  # ── SEARCH ─────────────────────────────────────────────
+  /search:
+    get:
+      operationId: search
+      tags: [books]
+      summary: Search books and authors
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: genre
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
+  # ── BOOKS ──────────────────────────────────────────────
+  /books:
+    get:
+      operationId: listBooks
+      tags: [books]
+      summary: List books
+      parameters:
+        - name: genre
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: authorId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Books list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookList"
+    post:
+      operationId: createBook
+      tags: [books]
+      summary: Create a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+  /books/{id}:
+    get:
+      operationId: getBook
+      tags: [books]
+      summary: Get a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBook
+      tags: [books]
+      summary: Update a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+    delete:
+      operationId: deleteBook
+      tags: [books]
+      summary: Delete a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /books/{id}/rate:
+    post:
+      operationId: rateBook
+      tags: [books]
+      summary: Rate a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingInput"
+      responses:
+        "200":
+          description: Rated
+  /books/{id}/bookmark:
+    post:
+      operationId: toggleBookmark
+      tags: [books]
+      summary: Toggle bookmark
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkStatus"
+
+  # ── CHAPTERS ───────────────────────────────────────────
+  /books/{bookId}/chapters:
+    get:
+      operationId: listChapters
+      tags: [chapters]
+      summary: List chapters of a book
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChapterSummary"
+    post:
+      operationId: createChapter
+      tags: [chapters]
+      summary: Create a chapter
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChapterInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chapter"
+  /chapters/{id}:
+    get:
+      operationId: getChapter
+      tags: [chapters]
+      summary: Read a chapter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapter content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterRead"
+        "403":
+          description: Premium required
+        "404":
+          description: Not found
+    patch:
+      operationId: updateChapter
+      tags: [chapters]
+      summary: Update a chapter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChapterUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chapter"
+    delete:
+      operationId: deleteChapter
+      tags: [chapters]
+      summary: Delete a chapter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── COMMENTS ───────────────────────────────────────────
+  /chapters/{chapterId}/comments:
+    get:
+      operationId: listComments
+      tags: [comments]
+      summary: Get comments for a chapter
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Post a comment
+      parameters:
+        - name: chapterId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+  /comments/{id}:
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /comments/{id}/like:
+    post:
+      operationId: likeComment
+      tags: [comments]
+      summary: Like a comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Liked
+
+  # ── USERS ──────────────────────────────────────────────
+  /users/me:
+    patch:
+      operationId: updateMe
+      tags: [users]
+      summary: Update own profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+  /users/me/library:
+    get:
+      operationId: getLibrary
+      tags: [users]
+      summary: Get user's bookmarked books
+      responses:
+        "200":
+          description: Library
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+  /users/me/reading-history:
+    get:
+      operationId: getReadingHistory
+      tags: [users]
+      summary: Get reading history
+      responses:
+        "200":
+          description: History
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReadingHistory"
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Not found
+  /users/{id}/follow:
+    post:
+      operationId: followUser
+      tags: [users]
+      summary: Follow an author
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Followed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowStatus"
+    delete:
+      operationId: unfollowUser
+      tags: [users]
+      summary: Unfollow an author
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unfollowed
+
+  # ── PREMIUM ────────────────────────────────────────────
+  /premium/plans:
+    get:
+      operationId: getPremiumPlans
+      tags: [premium]
+      summary: Get premium plans
+      responses:
+        "200":
+          description: Plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PremiumPlan"
+  /premium/checkout:
+    post:
+      operationId: createCheckout
+      tags: [premium]
+      summary: Create Stripe checkout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+
+  # ── ADMIN ──────────────────────────────────────────────
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Platform stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List all users
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserList"
+  /admin/users/{id}:
+    patch:
+      operationId: updateAdminUser
+      tags: [admin]
+      summary: Ban/unban or promote user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      operationId: deleteAdminUser
+      tags: [admin]
+      summary: Delete a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /admin/books:
+    get:
+      operationId: listAdminBooks
+      tags: [admin]
+      summary: List all books for admin
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Books
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBookList"
+  /admin/books/{id}:
+    patch:
+      operationId: updateAdminBook
+      tags: [admin]
+      summary: Feature/hide a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminBookUpdate"
+      responses:
+        "200":
+          description: Updated
+    delete:
+      operationId: deleteAdminBook
+      tags: [admin]
+      summary: Delete a book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ── NOTIFICATIONS ───────────────────────────────────────
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get user notifications
+      responses:
+        "200":
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /notifications/{id}:
+    delete:
+      operationId: deleteNotification
+      tags: [notifications]
+      summary: Delete a notification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    # ── AUTH SCHEMAS ──────────────────────────────────────
+    RegisterInput:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    AuthUser:
+      type: object
+      required: [id, username, email, role]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        isPremium:
+          type: boolean
+        followerCount:
+          type: integer
+        followingCount:
+          type: integer
+        bookCount:
+          type: integer
+        createdAt:
+          type: string
+
+    # ── HOME SCHEMAS ──────────────────────────────────────
+    HomeData:
+      type: object
+      required: [trending, topRanked, newReleases, featuredBooks, topAuthors, genres]
+      properties:
+        trending:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        topRanked:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        newReleases:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        featuredBooks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        topAuthors:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthorCard"
+        genres:
+          type: array
+          items:
+            type: string
+
+    # ── BOOK SCHEMAS ──────────────────────────────────────
+    Book:
+      type: object
+      required: [id, title, authorId, authorName, genre, status, coverUrl, viewCount, chapterCount, rating, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        authorId:
+          type: integer
+        authorName:
+          type: string
+        authorAvatar:
+          type: ["string", "null"]
+        genre:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        synopsis:
+          type: ["string", "null"]
+        coverUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+        viewCount:
+          type: integer
+        chapterCount:
+          type: integer
+        rating:
+          type: number
+        ratingCount:
+          type: integer
+        isPremium:
+          type: boolean
+        isFeatured:
+          type: boolean
+        isBookmarked:
+          type: ["boolean", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    BookDetail:
+      type: object
+      required: [id, title, authorId, authorName, genre, status, coverUrl, viewCount, chapterCount, rating, chapters, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        authorId:
+          type: integer
+        authorName:
+          type: string
+        authorAvatar:
+          type: ["string", "null"]
+        authorBio:
+          type: ["string", "null"]
+        authorFollowers:
+          type: integer
+        genre:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        synopsis:
+          type: ["string", "null"]
+        coverUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+        viewCount:
+          type: integer
+        chapterCount:
+          type: integer
+        rating:
+          type: number
+        ratingCount:
+          type: integer
+        isPremium:
+          type: boolean
+        isFeatured:
+          type: boolean
+        isBookmarked:
+          type: ["boolean", "null"]
+        userRating:
+          type: ["integer", "null"]
+        isFollowingAuthor:
+          type: ["boolean", "null"]
+        chapters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChapterSummary"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    BookInput:
+      type: object
+      required: [title, genre, synopsis]
+      properties:
+        title:
+          type: string
+        genre:
+          type: string
+        synopsis:
+          type: string
+        coverUrl:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        isPremium:
+          type: boolean
+    BookUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        genre:
+          type: string
+        synopsis:
+          type: string
+        coverUrl:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        isPremium:
+          type: boolean
+    BookList:
+      type: object
+      required: [books, total, page, totalPages]
+      properties:
+        books:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+    RatingInput:
+      type: object
+      required: [score]
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+    BookmarkStatus:
+      type: object
+      required: [bookmarked]
+      properties:
+        bookmarked:
+          type: boolean
+
+    # ── CHAPTER SCHEMAS ───────────────────────────────────
+    ChapterSummary:
+      type: object
+      required: [id, bookId, title, order, isPremium, createdAt]
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        title:
+          type: string
+        order:
+          type: integer
+        isPremium:
+          type: boolean
+        wordCount:
+          type: integer
+        createdAt:
+          type: string
+    Chapter:
+      type: object
+      required: [id, bookId, title, order, isPremium, createdAt]
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        title:
+          type: string
+        content:
+          type: ["string", "null"]
+        order:
+          type: integer
+        isPremium:
+          type: boolean
+        wordCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    ChapterRead:
+      type: object
+      required: [id, bookId, bookTitle, title, content, order, isPremium]
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        bookTitle:
+          type: string
+        authorId:
+          type: integer
+        authorName:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        order:
+          type: integer
+        isPremium:
+          type: boolean
+        wordCount:
+          type: integer
+        prevChapterId:
+          type: ["integer", "null"]
+        nextChapterId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+    ChapterInput:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        isPremium:
+          type: boolean
+        order:
+          type: integer
+    ChapterUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        isPremium:
+          type: boolean
+        order:
+          type: integer
+
+    # ── COMMENT SCHEMAS ───────────────────────────────────
+    Comment:
+      type: object
+      required: [id, chapterId, userId, username, content, likes, createdAt]
+      properties:
+        id:
+          type: integer
+        chapterId:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        userAvatar:
+          type: ["string", "null"]
+        content:
+          type: string
+        likes:
+          type: integer
+        isLiked:
+          type: ["boolean", "null"]
+        createdAt:
+          type: string
+    CommentInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 1000
+
+    # ── USER SCHEMAS ──────────────────────────────────────
+    UserProfile:
+      type: object
+      required: [id, username, role, followerCount, followingCount, bookCount, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        role:
+          type: string
+        isPremium:
+          type: boolean
+        followerCount:
+          type: integer
+        followingCount:
+          type: integer
+        bookCount:
+          type: integer
+        books:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        isFollowing:
+          type: ["boolean", "null"]
+        createdAt:
+          type: string
+    ProfileUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+    AuthorCard:
+      type: object
+      required: [id, username, followerCount, bookCount]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        followerCount:
+          type: integer
+        bookCount:
+          type: integer
+    FollowStatus:
+      type: object
+      required: [following]
+      properties:
+        following:
+          type: boolean
+    ReadingHistory:
+      type: object
+      required: [bookId, bookTitle, chapterId, chapterTitle, readAt]
+      properties:
+        bookId:
+          type: integer
+        bookTitle:
+          type: string
+        coverUrl:
+          type: ["string", "null"]
+        chapterId:
+          type: integer
+        chapterTitle:
+          type: string
+        readAt:
+          type: string
+
+    # ── PREMIUM SCHEMAS ───────────────────────────────────
+    PremiumPlan:
+      type: object
+      required: [id, name, price, interval, features]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        interval:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+    CheckoutInput:
+      type: object
+      required: [planId]
+      properties:
+        planId:
+          type: string
+    CheckoutSession:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+
+    # ── SEARCH SCHEMAS ────────────────────────────────────
+    SearchResults:
+      type: object
+      required: [books, authors, total]
+      properties:
+        books:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        authors:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthorCard"
+        total:
+          type: integer
+
+    # ── ADMIN SCHEMAS ─────────────────────────────────────
+    AdminStats:
+      type: object
+      required: [totalUsers, totalBooks, totalChapters, totalComments, premiumUsers, totalRevenue]
+      properties:
+        totalUsers:
+          type: integer
+        totalBooks:
+          type: integer
+        totalChapters:
+          type: integer
+        totalComments:
+          type: integer
+        premiumUsers:
+          type: integer
+        totalRevenue:
+          type: number
+        newUsersToday:
+          type: integer
+        newBooksToday:
+          type: integer
+    AdminUserList:
+      type: object
+      required: [users, total, page, totalPages]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUser"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+    AdminUser:
+      type: object
+      required: [id, username, email, role, isBanned, isPremium, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        isBanned:
+          type: boolean
+        isPremium:
+          type: boolean
+        bookCount:
+          type: integer
+        createdAt:
+          type: string
+    AdminUserUpdate:
+      type: object
+      properties:
+        isBanned:
+          type: boolean
+        role:
+          type: string
+    AdminBookList:
+      type: object
+      required: [books, total, page, totalPages]
+      properties:
+        books:
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+    AdminBookUpdate:
+      type: object
+      properties:
+        isFeatured:
+          type: boolean
+        isHidden:
+          type: boolean
+
+    Notification:
+      type: object
+      required: [id, type, title, message, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        isRead:
+          type: boolean
+        relatedBookId:
+          type: integer
+          nullable: true
+        relatedChapterId:
+          type: integer
+          nullable: true
+        actorName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+
+    NotificationList:
+      type: object
+      required: [notifications, unreadCount]
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unreadCount:
+          type: integer

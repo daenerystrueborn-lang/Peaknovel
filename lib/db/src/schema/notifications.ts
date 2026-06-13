@@ -1,0 +1,17 @@
+import { pgTable, serial, integer, text, boolean, timestamp } from "drizzle-orm/pg-core";
+import { usersTable } from "./users";
+
+export const notificationsTable = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // 'comment' | 'bookmark' | 'follow' | 'chapter'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").notNull().default(false),
+  relatedBookId: integer("related_book_id"),
+  relatedChapterId: integer("related_chapter_id"),
+  actorName: text("actor_name"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type Notification = typeof notificationsTable.$inferSelect;

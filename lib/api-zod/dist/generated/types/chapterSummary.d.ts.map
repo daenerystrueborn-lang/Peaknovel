@@ -1,0 +1,1 @@
+{"version":3,"file":"chapterSummary.d.ts","sourceRoot":"","sources":["../../../src/generated/types/chapterSummary.ts"],"names":[],"mappings":"AAAA;;;;;;GAMG;AAEH,MAAM,WAAW,cAAc;IAC7B,EAAE,EAAE,MAAM,CAAC;IACX,MAAM,EAAE,MAAM,CAAC;IACf,KAAK,EAAE,MAAM,CAAC;IACd,KAAK,EAAE,MAAM,CAAC;IACd,SAAS,EAAE,OAAO,CAAC;IACnB,SAAS,CAAC,EAAE,MAAM,CAAC;IACnB,SAAS,EAAE,MAAM,CAAC;CACnB"}
