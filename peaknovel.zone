@@ -1,0 +1,28 @@
+; ============================================
+; DNS Zone File — peaknovel.net
+; Authoritative NS: Cloudflare
+; ============================================
+
+$ORIGIN peaknovel.net.
+$TTL    3600
+
+; SOA
+@   IN  SOA  dante.ns.cloudflare.com. admin.peaknovel.net. (
+                2024061301  ; Serial
+                3600        ; Refresh
+                900         ; Retry
+                604800      ; Expire
+                300 )       ; Minimum TTL
+
+; Nameservers
+@   IN  NS   dante.ns.cloudflare.com.
+@   IN  NS   nova.ns.cloudflare.com.
+
+; Root domain → Vercel
+@   IN  A     76.76.21.21
+
+; www → Vercel
+www IN  CNAME cname.vercel-dns.com.
+
+; Optional: mail
+; @  IN  MX  10  mail.peaknovel.net.
